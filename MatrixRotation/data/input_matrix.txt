@@ -1,3 +1,4 @@
-10 m10by10.txt
-20 m20by20.txt 
 3 m3by3.txt
+10 m10by10.txt
+20 m20by20.txt
+100 m100by100.txt

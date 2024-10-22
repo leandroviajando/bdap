@@ -1,7 +1,11 @@
 #include <cstring>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+
+const std::filesystem::path WORKDIR = std::filesystem::current_path();
+const std::filesystem::path DATADIR = WORKDIR / "data";
 
 /**
  * Rotate a square matrix in a naive way.
@@ -15,11 +19,10 @@
  * @param n The size of the square matrix.
  */
 void rotate_naive(double *src, double *dest, int n) {
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++)
     for (int j = 0; j < n; j++) {
       dest[j * n + i] = src[(n - 1 - i) * n + j];
     }
-  }
 }
 
 /**
@@ -35,11 +38,10 @@ void rotate_naive(double *src, double *dest, int n) {
  * @param B     Size of the block.
  */
 void rotate_blocked(double *src, double *dest, int n, int B) {
-  for (int i = 0; i < n; i += B) {
+  for (int i = 0; i < n; i += B)
     for (int j = 0; j < n; j += B) {
       // TODO: Implement the blocked rotation here.
     }
-  }
 }
 
 /**
@@ -50,17 +52,15 @@ void rotate_blocked(double *src, double *dest, int n, int B) {
  * @param n        The size of the matrix (n x n).
  */
 void readMatrix(std::string filename, double *matrix, int n) {
-  std::ifstream file(filename);
+  std::ifstream file(DATADIR / filename);
   if (file.is_open()) {
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++)
       for (int j = 0; j < n; j++) {
         file >> matrix[i * n + j];
       }
-    }
     file.close();
-  } else {
-    std::cout << "Unable to open file: " << filename << std::endl;
-  }
+  } else
+    std::cout << "Unable to open file: " << DATADIR / filename << std::endl;
 }
 
 int main(int argc, char **argv) {
@@ -69,14 +69,12 @@ int main(int argc, char **argv) {
   std::string filename = argv[3];
   int block_size = n;
 
-  if (method == "blocked") {
-    block_size = std::atoi(argv[4]);
-  }
+  if (method == "blocked") block_size = std::atoi(argv[4]);
 
   std::cout << "method=" << method << std::endl;
   std::cout << "N=" << n << std::endl;
   std::cout << "B=" << block_size << std::endl;
-  std::cout << "matrix: " << filename << std::endl;
+  std::cout << "matrix=" << filename << std::endl;
 
   double *src = new double[n * n];
   double *dest = new double[n * n];
@@ -88,16 +86,15 @@ int main(int argc, char **argv) {
 
   begin = clock();
 
-  if (method == "blocked") {
+  if (method == "blocked")
     rotate_blocked(src, dest, n, block_size);
-  } else {
+  else
     rotate_naive(src, dest, n);
-  }
 
   end = clock();
 
   time_spent = static_cast<double>(end - begin) / CLOCKS_PER_SEC;
-  std::cout << "time: " << time_spent << std::endl;
+  std::cout << "time=" << time_spent << std::endl;
 
   free(src);
   free(dest);

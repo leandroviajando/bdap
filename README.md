@@ -1,4 +1,4 @@
-# BDAP Exercises
+# BDAP
 
 ## Setup
 
