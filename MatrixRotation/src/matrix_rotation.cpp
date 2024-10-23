@@ -39,9 +39,12 @@ void rotate_naive(double *src, double *dest, int n) {
  */
 void rotate_blocked(double *src, double *dest, int n, int B) {
   for (int i = 0; i < n; i += B)
-    for (int j = 0; j < n; j += B) {
-      // TODO: Implement the blocked rotation here.
-    }
+    for (int j = 0; j < n; j += B)
+      // TODO: Implement the blocked rotation minimising cache misses.
+      for (int bi = 0; bi < B && (i + bi) < n; bi++)
+        for (int bj = 0; bj < B && (j + bj) < n; bj++)
+          dest[(j + bj) * n + (n - 1 - (i + bi))] =
+              src[(i + bi) * n + (j + bj)];
 }
 
 /**
