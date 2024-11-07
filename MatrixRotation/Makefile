@@ -2,14 +2,18 @@ SRCDIR=src
 BINDIR=bin
 
 CXX=g++ -std=c++17
-CXXFLAGS=-o
+CXXFLAGS=-O3 -march=native -ffast-math -funroll-loops -o
 
-default: $(BINDIR)/matrix_rotation.o
+default: clean $(BINDIR)/matrix_rotation.o run
 
 $(BINDIR)/matrix_rotation.o: $(SRCDIR)/matrix_rotation.cpp
 	mkdir -p $(BINDIR)
-	$(CXX) $< $(CXXFLAGS) $@
+	$(CXX) $(CXXFLAGS) $@ $<
 
 .PHONY: clean
 clean:
 	rm -r $(BINDIR)
+
+.PHONY: run
+run:
+	./exe.sh

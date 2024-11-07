@@ -6,7 +6,6 @@ import sys
 from typing import Dict, Final, List, Literal, NamedTuple, Union, cast
 
 import matplotlib.pyplot as plt
-import numpy as np
 import tabulate
 
 ASSETSDIR: Final = (WORKDIR := pathlib.Path(__file__).parent) / "assets"
@@ -15,7 +14,7 @@ DATADIR: Final = WORKDIR / "data"
 EXECUTABLE_PATH: Final = BINDIR / "matrix_rotation.o"
 FIGURE_PATH: Final = ASSETSDIR / "graph.png"
 
-NUM_EXPERIMENTS: Final = 100
+NUM_EXPERIMENTS: Final = 10
 
 X_AXIS_LABEL: Final = "Matrix Size (n)"
 Y_AXIS_LABEL: Final = "Time (seconds)"
@@ -80,18 +79,18 @@ def plot_results(
 
     n_values = sorted(results.keys())
     strategies = set(strategy for data in results.values() for strategy in data.keys())
-    bar_width = 0.15
-    x_indexes = np.arange(len(n_values))
 
-    for i, strategy in enumerate(strategies):
+    for strategy in strategies:
         avg_time_values = [results[n].get(strategy, (0, 0))[0] for n in n_values]
         stdev_time_values = [results[n].get(strategy, (0, 0))[1] for n in n_values]
-        plt.bar(
-            x_indexes + i * bar_width,
+        plt.errorbar(
+            n_values,
             avg_time_values,
-            width=bar_width,
-            label=str(strategy),
             yerr=stdev_time_values,
+            label=strategy if isinstance(strategy, str) else f"blocked-{strategy}",
+            capsize=5,
+            marker="o",
+            linestyle="-",
         )
 
     plt.xlabel(X_AXIS_LABEL)
@@ -99,9 +98,7 @@ def plot_results(
     plt.title(
         f"Matrix Rotation Time Comparison (averaged over {num_experiments} experiments)"
     )
-    plt.xticks(
-        x_indexes + bar_width * (len(strategies) - 1) / 2, list(map(str, n_values))
-    )
+    plt.xticks(n_values, list(map(str, n_values)))
     plt.legend()
     plt.savefig(savefig)
     plt.show()

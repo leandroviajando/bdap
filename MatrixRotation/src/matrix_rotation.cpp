@@ -14,15 +14,13 @@ const std::filesystem::path DATADIR = WORKDIR / "data";
  * based on their indices. The rotation is performed in-place, meaning the
  * original matrix is modified.
  *
- * @param a Pointer to the input matrix.
- * @param b Pointer to the output matrix.
- * @param n The size of the square matrix.
+ * @param src   Pointer to the input matrix.
+ * @param dest  Pointer to the output matrix.
+ * @param n     The size of the square matrix.
  */
 void rotate_naive(double *src, double *dest, int n) {
   for (int i = 0; i < n; i++)
-    for (int j = 0; j < n; j++) {
-      dest[j * n + i] = src[(n - 1 - i) * n + j];
-    }
+    for (int j = 0; j < n; j++) dest[j * n + i] = src[(n - 1 - i) * n + j];
 }
 
 /**
@@ -30,18 +28,61 @@ void rotate_naive(double *src, double *dest, int n) {
  *
  * This function rotates a square matrix by 90 degrees clockwise in a blocked
  * fashion, where each block of size B x B is rotated individually. The input
- * matrix 'a' is rotated and the result is stored in the output matrix 'b'.
+ * matrix 'src' is rotated and the result is stored in the output matrix 'dest'.
  *
- * @param a     Pointer to the input matrix.
- * @param b     Pointer to the output matrix.
+ * Note: The difference to the naive rotation is: `bi`, `bj` instead of `i`,
+ * `j`:
+ *
+ * `dest[j * n + i] = src[(n - 1 - i) * n + j]`
+ *
+ * `dest[bj * n + bi] = src[(n - 1 - bi) * n + bj]`
+ *
+ * For larger matrices (n>1000) this is more efficient because it reduces cash
+ * misses significantly.
+ *
+ * @param src   Pointer to the input matrix.
+ * @param dest  Pointer to the output matrix.
  * @param n     Size of the square matrix.
  * @param B     Size of the block.
  */
 void rotate_blocked(double *src, double *dest, int n, int B) {
   for (int i = 0; i < n; i += B)
-    for (int j = 0; j < n; j += B) {
-      // TODO: Implement the blocked rotation here.
+    for (int j = 0; j < n; j += B)
+      for (int bi = i; bi < std::min(i + B, n); bi++)
+        for (int bj = j; bj < std::min(j + B, n); bj++)
+          dest[bj * n + bi] = src[(n - 1 - bi) * n + bj];
+}
+
+/**
+ * Validate that blocked and naive rotations give the same result.
+ *
+ * @param src   Pointer to the input matrix.
+ * @param dest  Pointer to the output matrix.
+ * @param n     Size of the square matrix.
+ * @param B     Size of the block.
+ */
+void validate_results(double *src, double *dest, int n, int B) {
+  double *naive_dest = new double[n * n];
+  rotate_naive(src, naive_dest, n);
+
+  double *blocked_dest = new double[n * n];
+  rotate_blocked(src, blocked_dest, n, B);
+
+  for (int i = 0; i < n * n; i++) {
+    if (std::abs(naive_dest[i] - blocked_dest[i]) > 1e-10) {
+      std::cerr << "Error: Blocked rotation produced different results than "
+                   "naive rotation"
+                << std::endl;
+      free(naive_dest);
+      free(blocked_dest);
+      free(src);
+      free(dest);
+      exit(1);
     }
+  }
+
+  free(naive_dest);
+  free(blocked_dest);
 }
 
 /**
@@ -63,6 +104,11 @@ void readMatrix(std::string filename, double *matrix, int n) {
     std::cout << "Unable to open file: " << DATADIR / filename << std::endl;
 }
 
+/**
+ * Example usage:
+ *
+ * `./bin/matrix_rotation.o blocked 3 m3by3.txt 2`
+ */
 int main(int argc, char **argv) {
   std::string method = argv[1];
   int n = std::atoi(argv[2]);
@@ -80,6 +126,8 @@ int main(int argc, char **argv) {
   double *dest = new double[n * n];
 
   readMatrix(filename, src, n);
+
+  if (method == "blocked") validate_results(src, dest, n, block_size);
 
   clock_t begin, end;
   double time_spent;
