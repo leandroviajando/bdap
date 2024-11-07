@@ -1,17 +1,22 @@
-TARGETS = ./bin/Main.class ./bin/BloomFilter.class ./bin/MurmurHash.class 
+SHELL     := /usr/bin/env bash
+MAKEFLAGS += --silent
 
-default: $(TARGETS)
+BIN_DIR = ./bin
+SRC_DIR = ./src
 
-$(TARGETS): ./src/Main.java ./src/BloomFilter.java ./src/MurmurHash.java
-	rm -rf ./bin
-	mkdir -p ./bin
-	javac -d ./bin ./src/Main.java ./src/BloomFilter.java ./src/MurmurHash.java
+default: clean compile run
 
-# Run the code in Main.java
-run: default
-	java -cp ./bin/ Main
+.PHONY: clean compile run
 
 # Clean the compiled files
 clean:
-	$(RM) $(TARGETS)
+	$(RM) -rf $(BIN_DIR)
 
+# Compile the source code
+compile:
+	mkdir -p $(BIN_DIR)
+	javac -d $(BIN_DIR) $(SRC_DIR)/*.java
+
+# Run the code in Main.java
+run: compile
+	java -cp $(BIN_DIR) Main
